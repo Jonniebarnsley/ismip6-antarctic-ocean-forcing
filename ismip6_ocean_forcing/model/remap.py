@@ -246,7 +246,7 @@ def _remap(config, modelFolder):
             '{}/{}_t_*.nc'.format(progressDir, modelName), combine='nested',
             concat_dim='time')
         #Fully load netcdf files.
-        dsOut = dsOut.load()
+        dsOut.load()
 
         dsOut['z_bnds'] = ds.z_bnds
 
