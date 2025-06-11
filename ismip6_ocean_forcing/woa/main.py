@@ -25,7 +25,8 @@ def process_woa(config, decades):
             baseURL = 'https://data.nodc.noaa.gov/thredds/fileServer/ncei/' \
                       'woa/{}/{}/0.25/'.format(fieldName, decade)
             fileNames = ['woa18_{}_{}00_04.nc'.format(decade, shortName)]
-            download_files(fileNames, baseURL, 'woa')
+            if not os.path.isfile(os.path.join('woa',fileNames[0])):
+                download_files(fileNames, baseURL, 'woa')
 
     remap.remap_woa(config, woaDecades, woaWeights, decades)
 
