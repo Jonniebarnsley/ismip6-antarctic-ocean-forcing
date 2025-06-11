@@ -245,7 +245,11 @@ def _remap(config, modelFolder):
         dsOut = xarray.open_mfdataset(
             '{}/{}_t_*.nc'.format(progressDir, modelName), combine='nested',
             concat_dim='time')
+        #Fully load netcdf files.
+        dsOut.load()
 
         dsOut['z_bnds'] = ds.z_bnds
 
         dsOut.to_netcdf(outFileName)
+        #Close xarray object.
+        dsOut.close()
