@@ -5,6 +5,7 @@ import xarray
 import numpy
 import os
 import warnings
+from xarray.coding.times import CFDatetimeCoder
 
 parser = argparse.ArgumentParser(
     description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
@@ -25,7 +26,7 @@ def compute_yearly_mean(inFileName, outFileName):
                     'vertices_longitude': 'lon_vertices',
                     'vertices_latitude': 'lat_vertices'})
 
-    ds = ds.drop('time_bnds')
+    ds = ds.drop_vars('time_bnds')
 
     # crop to Southern Ocean
     minLat = ds.lat.min(dim='i')
@@ -55,8 +56,15 @@ def compute_yearly_mean(inFileName, outFileName):
     timeBounds[:, 0] = ds.time.values
     timeBounds[:, 1] = ds.time.values + 365
     ds['time_bnds'] = (('time', 'bnds'), timeBounds)
-
-    ds = xarray.decode_cf(ds, use_cftime=True)
+    ds['time_bnds'].attrs['units'] = "days since 0000-01-01 00:00:00"
+    ds['time_bnds'].attrs['calendar'] = "noleap"
+    
+    coder = CFDatetimeCoder(use_cftime=True)
+    time_var = ds.variables['time']
+    bnds_var = ds.variables['time_bnds']
+    decoded_time = coder.decode(time_var, time_var.attrs)
+    decoded_bnds = coder.decode(bnds_var, bnds_var.attrs)
+    ds = ds.assign_coords(time=decoded_time, time_bnds=decoded_bnds)
 
     encoding = {'time': {'units': 'days since 0000-01-01'}}
     ds.to_netcdf(outFileName, encoding=encoding)
@@ -87,36 +95,36 @@ for field in dates:
         compute_yearly_mean(inFileName, outFileName)
         histFiles[field].append(outFileName)
 
-dates = {'thetao': ['201501-204912'],
-         'so': ['201501-204912']}
-for scenario in ['ssp585']:
-    scenarioFiles = {}
-    for field in dates:
-        scenarioFiles[field] = []
-        for date in dates[field]:
-            inFileName = '{}/{}_Omon_{}_{}_{}_gn_{}.nc'.format(
-                args.out_dir, field, model, scenario, run, date)
+# dates = {'thetao': ['201501-204912'],
+#          'so': ['201501-204912']}
+# for scenario in ['ssp585']:
+#     scenarioFiles = {}
+#     for field in dates:
+#         scenarioFiles[field] = []
+#         for date in dates[field]:
+#             inFileName = '{}/{}_Omon_{}_{}_{}_gn_{}.nc'.format(
+#                 args.out_dir, field, model, scenario, run, date)
 
-            outFileName = '{}/{}_annual_{}_{}_{}_{}.nc'.format(
-                args.out_dir, field, model, scenario, run, date)
+#             outFileName = '{}/{}_annual_{}_{}_{}_{}.nc'.format(
+#                 args.out_dir, field, model, scenario, run, date)
 
-            compute_yearly_mean(inFileName, outFileName)
-            scenarioFiles[field].append(outFileName)
+#             compute_yearly_mean(inFileName, outFileName)
+#             scenarioFiles[field].append(outFileName)
 
-    for field in ['so', 'thetao']:
-        outFileName = \
-            '{}/{}_annual_{}_{}_{}_185001-201412.nc'.format(
-                args.out_dir, field, model, scenario, run)
-        if not os.path.exists(outFileName):
-            print(outFileName)
+#     for field in ['so', 'thetao']:
+#         outFileName = \
+#             '{}/{}_annual_{}_{}_{}_185001-201412.nc'.format(
+#                 args.out_dir, field, model, scenario, run)
+#         if not os.path.exists(outFileName):
+#             print(outFileName)
 
-            # combine it all into a single data set
-            ds = xarray.open_mfdataset(histFiles[field] + scenarioFiles[field],
-                                       combine='nested', concat_dim='time',
-                                       use_cftime=True)
+#             # combine it all into a single data set
+#             ds = xarray.open_mfdataset(histFiles[field] + scenarioFiles[field],
+#                                        combine='nested', concat_dim='time',
+#                                        use_cftime=True)
 
-            mask = ds['time.year'] <= 2014
-            tIndices = numpy.nonzero(mask.values)[0]
-            ds = ds.isel(time=tIndices)
-            encoding = {'time': {'units': 'days since 0000-01-01'}}
-            ds.to_netcdf(outFileName, encoding=encoding)
+#             mask = ds['time.year'] <= 2014
+#             tIndices = numpy.nonzero(mask.values)[0]
+#             ds = ds.isel(time=tIndices)
+#             encoding = {'time': {'units': 'days since 0000-01-01'}}
+#             ds.to_netcdf(outFileName, encoding=encoding)
