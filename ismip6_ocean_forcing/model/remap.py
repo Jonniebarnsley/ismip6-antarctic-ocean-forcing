@@ -192,22 +192,26 @@ def _remap(config, modelFolder):
 
         if len(ds.lon.dims) == 1:
             inDescriptor = LatLonGridDescriptor.read(
-                    inFileName, latVarName='lat', lonVarName='lon')
+                    inFileName, lat_var_name='lat', lon_var_name='lon')
         else:
             assert(len(ds.lon.dims) == 2)
             inDescriptor = LatLon2DGridDescriptor.read(
-                    inFileName, latVarName='lat', lonVarName='lon')
+                    inFileName, lat_var_name='lat', lon_var_name='lon')
         inDescriptor.regional = True
         outDescriptor = get_polar_descriptor_from_file(outGridFileName,
                                                        projection='antarctic')
 
         mappingFileName = '{}/map_{}_to_{}.nc'.format(
-                modelName.lower(), inDescriptor.meshName,
-                outDescriptor.meshName)
+                modelName.lower(), inDescriptor.mesh_name,
+                outDescriptor.mesh_name)
 
-        remapper = Remapper(inDescriptor, outDescriptor, mappingFileName)
+        remapper = Remapper(
+                map_filename=mappingFileName,
+                src_descriptor=inDescriptor, 
+                dst_descriptor=outDescriptor,
+                method='bilinear')
 
-        remapper.build_mapping_file(method='bilinear')
+        remapper.build_map()
 
         ds = ds.drop_vars(['lat', 'lon'])
 
@@ -227,7 +231,7 @@ def _remap(config, modelFolder):
                 continue
 
             dsIn = ds.isel(time=tIndex)
-            dsOut = remapper.remap(dsIn, renormalizationThreshold=0.1)
+            dsOut = remapper.remap_numpy(dsIn, renormalization_threshold=0.1)
 
             dsOut = dsOut.transpose('z', 'y', 'x')
 
