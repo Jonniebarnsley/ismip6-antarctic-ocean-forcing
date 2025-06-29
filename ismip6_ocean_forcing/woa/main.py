@@ -18,12 +18,13 @@ def process_woa(config, decades):
 
     woaDecades = ['95A4', 'A5B7']
     woaWeights = [10., 13.]
-
     for decade in woaDecades:
         for fieldName, shortName in [('temperature', 't'), ('salinity', 's')]:
 
-            baseURL = 'https://data.nodc.noaa.gov/thredds/fileServer/ncei/' \
-                      'woa/{}/{}/0.25/'.format(fieldName, decade)
+            #baseURL = 'https://data.nodc.noaa.gov/thredds/fileServer/ncei/' \
+            #          'woa/{}/{}/0.25/'.format(fieldName, decade)
+            baseURL = 'https://www.ncei.noaa.gov/data/oceans/ncei/woa/{}/{}/0.25/'.format(fieldName, decade)
+
             fileNames = ['woa18_{}_{}00_04.nc'.format(decade, shortName)]
             if not os.path.exists(os.path.join('woa',fileNames[-1])):
                 download_files(fileNames, baseURL, 'woa')
