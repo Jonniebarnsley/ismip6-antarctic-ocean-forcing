@@ -209,8 +209,8 @@ def interp_depth(field, weights, inIndices, normalizationThreshold=None):
     '''
     # Drop the 'time' dimension if it exists
     if 'time' in field.dims:
-        field = field.drop('time')
-
+        field = field.squeeze('time')
+    
     nzIn, ny, nx = field.values.shape
     nSlabs, nzOut = weights.values.shape
 
