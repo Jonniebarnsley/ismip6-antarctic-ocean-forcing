@@ -103,3 +103,27 @@ venv.bak/
 # mypy
 .mypy_cache/
 *.sif
+
+# misc
+=1.4.0
+PET0.RegridWeightGen.Log
+
+# obs
+bedmap2
+imbie
+meop
+obs
+woa
+en4
+ismip6
+
+# pyremap
+pyremap
+
+# models
+ukesm1-0-ll
+cesm2-waccm
+
+# slurm
+output
+error
