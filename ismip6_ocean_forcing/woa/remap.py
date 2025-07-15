@@ -153,21 +153,22 @@ def _remap(config, decades):
 
         varName = fieldName
 
-        inDescriptor = LatLonGridDescriptor.read(fileName=inFileName)
+        inDescriptor = LatLonGridDescriptor.read(filename=inFileName)
         outDescriptor = get_polar_descriptor_from_file(outGridFileName,
                                                        projection='antarctic')
 
-        mappingFileName = 'woa/map_{}_to_{}.nc'.format(inDescriptor.meshName,
-                                                       outDescriptor.meshName)
+        mappingFileName = 'woa/map_{}_to_{}.nc'.format(inDescriptor.mesh_name,
+                                                       outDescriptor.mesh_name)
 
-        remapper = Remapper(inDescriptor, outDescriptor, mappingFileName)
+        remapper = Remapper(ntasks=1, map_filename=mappingFileName, method='bilinear', \
+                src_descriptor=inDescriptor, dst_descriptor=outDescriptor)
 
-        remapper.build_mapping_file(method='bilinear')
+        remapper.build_map()
 
         ds = xarray.open_dataset(inFileName)
         ds = ds.rename({varName: fieldName})
 
-        dsOut = remapper.remap(ds, renormalizationThreshold=0.1)
+        dsOut = remapper.remap_numpy(ds, renormalization_threshold=0.1)
 
         for attrName in ['units', 'standard_name', 'long_name']:
             dsOut[fieldName].attrs[attrName] = ds[fieldName].attrs[attrName]
