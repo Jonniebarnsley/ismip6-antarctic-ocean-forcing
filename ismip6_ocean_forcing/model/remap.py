@@ -2,6 +2,7 @@ import xarray
 import os
 import numpy
 import progressbar
+from xarray.coders import CFDatetimeCoder
 from pyremap import get_polar_descriptor_from_file, LatLonGridDescriptor, \
     LatLon2DGridDescriptor, Remapper
 
@@ -59,8 +60,9 @@ def _fix_units_and_periodicity(config, modelFolder):
         outFileName = outFileNames[fieldName]
         print('    {}'.format(outFileName))
         keepList = ['lat', 'lon', 'z', 'time', 'z_bnds', fieldName]
-
-        ds = xarray.open_dataset(inFileName)
+        
+        coder = CFDatetimeCoder(use_cftime=True)
+        ds = xarray.open_dataset(inFileName, decode_times=coder)
         for name in renameDict:
             if name in ds:
                 newName = renameDict[name]
@@ -187,8 +189,9 @@ def _remap(config, modelFolder):
             os.makedirs(progressDir)
         except OSError:
             pass
-
-        ds = xarray.open_dataset(inFileName)
+        
+        coder = CFDatetimeCoder(use_cftime=True)
+        ds = xarray.open_dataset(inFileName, decode_times=coder)
 
         if len(ds.lon.dims) == 1:
             inDescriptor = LatLonGridDescriptor.read(
@@ -245,10 +248,11 @@ def _remap(config, modelFolder):
 
             bar.update(tIndex+1)
         bar.finish()
-
+        
+        coder = CFDatetimeCoder(use_cftime=True)
         dsOut = xarray.open_mfdataset(
             '{}/{}_t_*.nc'.format(progressDir, modelName), combine='nested',
-            concat_dim='time')
+            concat_dim='time', decode_times=coder)
         #Fully load netcdf files.
         dsOut.load()
 
