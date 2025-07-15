@@ -127,3 +127,7 @@ cesm2-waccm
 # slurm
 output
 error
+
+# conda
+conda
+
